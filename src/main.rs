@@ -1,13 +1,8 @@
-use rand::prelude::*;
-use core::fmt;
-use std::fs::File;
-use std::io::Read;
-
 mod game;
 mod players;
 
 use crate::game::{Map, Game};
-use crate::players::{RandomPlayer, HumanPlayer, Player};
+use crate::players::{RandomPlayer};
 #[macro_use]
 extern crate lazy_static;
 //use finalfusion::prelude::*;
@@ -20,6 +15,7 @@ extern crate lazy_static;
 1- Generate random map
 2- Generate random words
 3- Separate code into separate files
+4. Check words against map
 4. Make game with random player and human player
 5. Word vectors
 */
@@ -32,14 +28,14 @@ fn main() {
     println!("Map: \n{}", map);
 
 
-    let blue_player = Box::new(HumanPlayer{});
-    let red_player = Box::new(RandomPlayer::new());
+    let blue_player = Box::new(RandomPlayer::new(&map.words));
+    let red_player = Box::new(RandomPlayer::new(&map.words));
 
-    let mut game = Game{map, red_player, blue_player};
+    let mut game = Game{map: map, red_player, blue_player};
 
     let hint = game.red_player.give_hint();
-    println!("Hint: {:?}", &hint);
-    println!("Words: {:?}", game.red_player.choose_words(hint))
+
+    game.tick()
 //    let mut reader = BufReader::new(File::open("resources/english-skipgram-mincount-50-ctx-10-ns-5-dims-300.fifu").unwrap());
 //
 //    // Read the embeddings.
