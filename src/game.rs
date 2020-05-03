@@ -17,32 +17,71 @@ lazy_static! {
 }
 
 pub struct Game<'a> {
-    pub map: Map,
-    pub red_player: Box<dyn Player + 'a>,
-    pub blue_player: Box<dyn Player + 'a>,
+    pub map: &'a mut Map,
+    pub red_player: &'a mut Player,
+    pub blue_player: &'a mut Player,
+    pub is_over:  bool,
+    pub current_player: State,
 }
 
 impl<'a> Game<'a> {
-    pub fn tick(&'a mut self)  {
-        let hint = self.red_player.give_hint();
-        let words = self.blue_player.choose_words(&hint);
+
+    pub fn new(map : &'a mut Map, red_player: &'a mut Player, blue_player: &'a mut Player) -> Game<'a> {
+        Game{map, red_player, blue_player, is_over: false, current_player: Red}
+    }
+    pub fn tick(&'a mut  self)  {
+        // ??? why can't use curr_player like var?
+        let hint = match self.current_player {
+            Red => self.red_player.give_hint(),
+            Blue => self.blue_player.give_hint(),
+            _ => panic!("Unexpected state"),
+        };
+
+        let words = match self.current_player {
+            Red => self.red_player.choose_words(&hint, &self.map.words),
+            Blue => self.blue_player.choose_words(&hint, &self.map.words),
+            _ => panic!("Unexpected stated"),
+        };
         println!("Hint: {:?}", &hint);
         println!("Words: {:?}", words);
-        // println!("Words: {:?}", words);
-        self.check_words(words)
-    }
-
-    pub fn check_words(&self, words : Vec<&'static String>) {
         for word in words {
-            if self.map.words.contains(&word) {
-                println!("Found {}", word);
+            //  The word should be guaranteed to be from the words on the map
+            let i = self.map.words.iter().position(|&x| x == word).unwrap() ;
+            self.map.visibility[i] = true;
+            let state = &self.map.states[i];
+            println!("Found {} at {} of type {}", word, i, self.map.states[i]);
+            match state {
+                Bomb => {
+                    self.is_over = true;
+                    break;
+                },
+                Neutral => {
+                    break;
+                },
+                Red => {
+                    if self.current_player == Blue {
+                        ();
+                    } else{
+                        println!("Missed!");
+                        break;
+                    }
+                },
+                Blue => {
+                    if self.current_player == Red {
+                        ();
+                    } else{
+                        println!("Missed!");
+                        break;
+                    }
+                }
             }
         }
+        // check how many are leftfr
     }
 }
 #[derive(Debug)]
 #[derive(PartialEq, Eq)]
-enum State {
+pub enum State {
     Neutral,
     Red,
     Blue,
@@ -65,6 +104,7 @@ impl fmt::Display for State {
 pub struct Map {
     states: [State; 25],
     pub words: Vec<&'static String>,
+    pub visibility: [bool; 25],
 }
 
 impl Map {
@@ -74,8 +114,9 @@ impl Map {
                                    Blue, Bomb];
         let mut rng = thread_rng();
         map.shuffle(&mut rng);
-        let words = CODENAME_WORDS.choose_multiple(&mut rng, 25).collect::<Vec<&'static String>>();
-        return Map{ states: map, words };
+        let words : Vec<&'static String> = CODENAME_WORDS.choose_multiple(&mut rng, 25).collect::<Vec<&'static String>>();
+
+        return Map{ states: map, words, visibility: [false; 25] };
     }
 
 }

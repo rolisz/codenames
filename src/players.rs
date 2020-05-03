@@ -4,42 +4,41 @@ use rand::prelude::*;
 use crate::game::{CODENAME_WORDS, Game, Map};
 
 #[derive(Debug)]
-pub struct Hint<'a> {
-    word: &'a str,
+pub struct Hint {
+    word: String,
     count: i32,
 }
 
 pub trait Player {
     fn give_hint(&mut self) -> Hint;
-    fn choose_words(&mut self, hint: &Hint) -> Vec<&'static String>;
+    fn choose_words<'a>(&mut self, hint: &Hint,
+                    words: &Vec<&'a String>) -> Vec<&'a String>;
 }
 
 #[derive(Debug)]
-pub struct RandomPlayer<'a> {
+pub struct RandomPlayer {
     rng: ThreadRng,
-    words: &'a Vec<&'static String>,
 }
 
-impl RandomPlayer<'_> {
-    pub fn new<'s>(words: &'s Vec<&'static String>) -> RandomPlayer<'s> {
+impl RandomPlayer {
+    pub fn new() -> RandomPlayer {
         let rng = thread_rng();
-        RandomPlayer{rng, words}
+        RandomPlayer{rng}
     }
 }
 
 
-impl Player for RandomPlayer<'_> {
+impl Player for RandomPlayer {
     fn give_hint(&mut self) -> Hint {
-        let word = CODENAME_WORDS.choose(&mut self.rng).unwrap();
+        let word = CODENAME_WORDS.choose(&mut self.rng).unwrap().clone();
         let count = self.rng.gen_range(1, 5);
         Hint{word, count}
     }
 
-    fn choose_words(&mut self, hint: &Hint) -> Vec<&'static String> {
+    fn  choose_words<'a>(&mut self, hint: &Hint, words: &Vec<&'a String>) -> Vec<&'a String> {
         let nr_found_words = self.rng.gen_range(1, hint.count+1) as usize;
 
-       // self.words.choose_multiple(&mut self.rng, nr_found_words).map(|&x| x).collect()
-        vec![]
+       words.choose_multiple(&mut self.rng, nr_found_words).map(|&x| x).collect()
     }
 }
 

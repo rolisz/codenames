@@ -24,16 +24,15 @@ extern crate lazy_static;
 
 fn main() {
 
-    let map = Map::new();
+    let mut map = Map::new();
     println!("Map: \n{}", map);
 
 
-    let blue_player = Box::new(RandomPlayer::new(&map.words));
-    let red_player = Box::new(RandomPlayer::new(&map.words));
+    let mut blue_player = RandomPlayer::new();
+    let mut red_player = RandomPlayer::new();
+    let mut game = Game::new(& mut map, &mut red_player, &mut blue_player );
 
-    let mut game = Game{map: map, red_player, blue_player};
-
-    let hint = game.red_player.give_hint();
+    //let hint = game.red_player.give_hint();
 
     game.tick()
 //    let mut reader = BufReader::new(File::open("resources/english-skipgram-mincount-50-ctx-10-ns-5-dims-300.fifu").unwrap());
