@@ -16,6 +16,8 @@ lazy_static! {
     };
 }
 
+static BLANK: String = String::new();
+
 pub struct Game<'a> {
     pub map: &'a mut Map,
     pub red_player: &'a mut Player,
@@ -38,18 +40,17 @@ impl<'a> Game<'a> {
         };
 
         let words = match self.current_player {
-            Red => self.red_player.choose_words(&hint, &self.map.words),
-            Blue => self.blue_player.choose_words(&hint, &self.map.words),
+            Red => self.red_player.choose_words(&hint, &self.map.get_remaining_words()),
+            Blue => self.blue_player.choose_words(&hint, &self.map.get_remaining_words()),
             _ => panic!("Unexpected stated"),
         };
         println!("Hint: {:?}", &hint);
         println!("Words: {:?}", words);
         for word in words {
-            //  The word should be guaranteed to be from the words on the map
-            let i = self.map.words.iter().position(|&x| x == word).unwrap() ;
-            self.map.visibility[i] = true;
-            let state = &self.map.states[i];
-            println!("Found {} at {} of type {}", word, i, self.map.states[i]);
+            let cell: &mut Cell = self.map.get_cell(word);
+            cell.visibility = true;
+            let state = cell.color;
+            println!("Found {} of type {}", word, state);
             match state {
                 Bomb => {
                     self.is_over = true;
@@ -79,8 +80,8 @@ impl<'a> Game<'a> {
         // check how many are leftfr
     }
 }
-#[derive(Debug)]
-#[derive(PartialEq, Eq)]
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum State {
     Neutral,
     Red,
@@ -102,9 +103,17 @@ impl fmt::Display for State {
 
 #[derive(Debug)]
 pub struct Map {
-    states: [State; 25],
-    pub words: Vec<&'static String>,
-    pub visibility: [bool; 25],
+    cells: [Cell; 25]
+    // states: [State; 25],
+    // pub words: Vec<&'static String>,
+    // pub visibility: [bool; 25],
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Cell {
+    color: State,
+    word: &'static String,
+    visibility: bool
 }
 
 impl Map {
@@ -116,19 +125,39 @@ impl Map {
         map.shuffle(&mut rng);
         let words : Vec<&'static String> = CODENAME_WORDS.choose_multiple(&mut rng, 25).collect::<Vec<&'static String>>();
 
-        return Map{ states: map, words, visibility: [false; 25] };
+        // Couldn't find a nicer way to initialize an array with structs in Rust
+        let mut cells: [Cell; 25] = [Cell{
+            color: State::Neutral,
+            word: &BLANK,
+            visibility: false
+        }; 25];
+        for i in 0..25 {
+            cells[i] = Cell{color: map[i], word: words[i], visibility: false};;
+        }
+        return Map{ cells};
     }
 
+    pub fn get_remaining_words(&self) -> Vec<&'static String> {
+        self.cells.iter().filter(|x| !x.visibility).map(|x| x.word).collect()
+    }
+
+    fn get_cell(&mut self, word: &String) -> &mut Cell {
+        //  The word should be guaranteed to be from the words on the map
+        self.cells.iter_mut().find(|x| x.word == word).unwrap()
+
+    }
 }
 
 impl fmt::Display for Map {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for i in 0..5 {
-            write!(f, "{} {} {} {} {}\n", self.states[i*5], self.states[i*5+1], self.states[i*5+2], self.states[i*5+3], self.states[i*5+4]);
+            write!(f, "{} {} {} {} {}\n",
+                   self.cells[i*5].color, self.cells[i*5+1].color, self.cells[i*5+2].color, self.cells[i*5+3].color, self.cells[i*5+4].color);
         }
-        let max_len = self.words.iter().map(|x| x.len()).max().unwrap();
+        let max_len = self.cells.iter().map(|x| x.word.len()).max().unwrap();
         for i in 0..5 {
-            write!(f, "{:width$} {:width$} {:width$} {:width$} {:width$}\n", self.words[i*5], self.words[i*5+1], self.words[i*5+2], self.words[i*5+3], self.words[i*5+4], width=max_len);
+            write!(f, "{:width$} {:width$} {:width$} {:width$} {:width$}\n",
+                   self.cells[i*5].word, self.cells[i*5+1].word, self.cells[i*5+2].word, self.cells[i*5+3].word, self.cells[i*5+4].word, width=max_len);
         }
         Ok(())
     }

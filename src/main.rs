@@ -16,6 +16,8 @@ extern crate lazy_static;
 2- Generate random words
 3- Separate code into separate files
 4. Check words against map
+5. Write an iterator for remaining words.
+6. Check winning conditions
 4. Make game with random player and human player
 5. Word vectors
 */
