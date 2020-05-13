@@ -104,9 +104,12 @@ impl FieldOperatives for HumanCliFieldOperatives {
            match io::stdin().read_line(&mut input) {
 
                 Ok(n) => {
+                    if input.trim() == "" {
+                        return chosen_words;
+                    }
                     match words.iter().position(|&x| {
-                        println!("{} {} {}", x, input, *x==input.trim());
-                        *x == input.trim()
+                        println!("{} {} {}", x, input, x.to_lowercase()==input.trim());
+                        x.to_lowercase() == input.trim()
                     }) {
                         Some(c) => {
                             chosen_words.push(words[c]);

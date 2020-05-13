@@ -31,6 +31,7 @@ extern crate lazy_static;
 9. Tick function shouldn't print anything. It should return an enum/option
 9. Look into the current player logic - might be wrong lifetime issue
 4. Make game with random player and human player
+5. Write some tests
 5. Word vectors
 */
 
