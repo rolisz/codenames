@@ -50,8 +50,8 @@ impl<'a> Game<'a> {
     pub fn tick(&mut  self) -> RoundResult  {
         // ??? why can't use curr_player like var?
         let hint = match self.current_player {
-            Red => self.red_spy_master.give_hint(),
-            Blue => self.blue_spy_master.give_hint(),
+            Red => self.red_spy_master.give_hint(self.map),
+            Blue => self.blue_spy_master.give_hint(self.map),
             _ => panic!("Unexpected state"),
         };
 

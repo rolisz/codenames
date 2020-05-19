@@ -91,9 +91,9 @@ checksum = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
 
 [[package]]
 name = "finalfusion"
-version = "0.11.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f77ea5d36003194aecf85b36a84569eb31fa5bd194d3209bb8835c3a0d937e84"
+checksum = "24bf09b1ca0587f6298a58296ec201dcfc83af291b41258ea4ea21b010f7fc65"
 dependencies = [
  "byteorder",
  "fnv",
@@ -105,6 +105,7 @@ dependencies = [
  "rand_xorshift",
  "reductive",
  "serde",
+ "thiserror",
  "toml",
 ]
 
@@ -427,6 +428,26 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "thiserror"
+version = "1.0.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5976891d6950b4f68477850b5b9e5aa64d955961466f9e174363f573e54e8ca7"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab81dbd1cd69cd2ce22ecfbdd3bdb73334ba25350649408cc6c085f46d89573d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

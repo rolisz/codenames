@@ -3,6 +3,12 @@ use rand::prelude::*;
 
 use crate::game::{CODENAME_WORDS, Game};
 use std::io;
+use std::io::BufReader;
+use std::fs::File;
+
+use finalfusion::prelude::*;
+use crate::map::Map;
+
 
 #[derive(Debug)]
 pub struct Hint {
@@ -11,7 +17,7 @@ pub struct Hint {
 }
 
 pub trait Spymaster {
-    fn give_hint(&mut self) -> Hint;
+    fn give_hint(&mut self, map: &Map) -> Hint;
 }
 
 pub trait FieldOperatives {
@@ -45,7 +51,7 @@ impl RandomFieldOperatives {
 
 
 impl Spymaster for RandomSpyMaster {
-    fn give_hint(&mut self) -> Hint {
+    fn give_hint(&mut self, map: &Map) -> Hint {
         let word = CODENAME_WORDS.choose(&mut self.rng).unwrap().clone();
         let count = self.rng.gen_range(1, 5);
         Hint { word, count }
@@ -81,7 +87,7 @@ impl HumanCliFieldOperatives {
     }
 }
 impl Spymaster for HumanCliSpymaster {
-    fn give_hint(&mut self) -> Hint {
+    fn give_hint(&mut self, map: &Map) -> Hint {
         let mut input = String::new();
         match io::stdin().read_line(&mut input) {
             Ok(n) => {
@@ -108,7 +114,6 @@ impl FieldOperatives for HumanCliFieldOperatives {
                         return chosen_words;
                     }
                     match words.iter().position(|&x| {
-                        println!("{} {} {}", x, input, x.to_lowercase()==input.trim());
                         x.to_lowercase() == input.trim()
                     }) {
                         Some(c) => {
@@ -124,4 +129,44 @@ impl FieldOperatives for HumanCliFieldOperatives {
        }
        return chosen_words;
    }
+}
+
+pub struct SimpleWordVectorSpymaster {
+    embeddings: Embeddings<VocabWrap, StorageWrap>
+}
+impl SimpleWordVectorSpymaster {
+    pub fn new() -> SimpleWordVectorSpymaster {
+        let mut reader = BufReader::new(File::open("resources/english-skipgram-mincount-50-ctx-10-ns-5-dims-300.fifu").unwrap());
+
+       // Read the embeddings.
+       let embeddings: Embeddings<VocabWrap, StorageWrap> =
+           Embeddings::read_embeddings(&mut reader)
+           .unwrap();
+        SimpleWordVectorSpymaster{embeddings}
+    }
+}
+
+impl Spymaster for SimpleWordVectorSpymaster {
+    fn give_hint(&mut self, map: &Map) -> Hint {
+        let mut input = String::new();
+        match io::stdin().read_line(&mut input) {
+            Ok(n) => {
+                let results = input.split_ascii_whitespace().collect::<Vec<&str>>();
+                let count = results[0].parse::<i32>().unwrap();
+                Hint{count, word: String::from(results[0])}
+            }
+            Err(error) => panic!("error: {}", error),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct SimpleWordVectorFieldOperatives {
+
+}
+
+impl SimpleWordVectorFieldOperatives {
+    pub fn new() -> SimpleWordVectorFieldOperatives {
+        SimpleWordVectorFieldOperatives{}
+    }
 }
