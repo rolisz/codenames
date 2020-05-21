@@ -32,7 +32,9 @@ name = "codenames"
 version = "0.1.0"
 dependencies = [
  "finalfusion",
+ "itertools 0.9.0",
  "lazy_static",
+ "ndarray",
  "rand",
 ]
 
@@ -97,7 +99,7 @@ checksum = "24bf09b1ca0587f6298a58296ec201dcfc83af291b41258ea4ea21b010f7fc65"
 dependencies = [
  "byteorder",
  "fnv",
- "itertools",
+ "itertools 0.8.2",
  "memmap",
  "ndarray",
  "ordered-float",
@@ -140,6 +142,15 @@ name = "itertools"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f56a2d0bc861f9165be4eb3442afd3c236d8a98afd426f65d92324ae1091a484"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "284f18f85651fe11e8a991b2adb42cb078325c996ed026d994719efcfca1d54b"
 dependencies = [
  "either",
 ]
@@ -201,12 +212,11 @@ dependencies = [
 
 [[package]]
 name = "ndarray"
-version = "0.13.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25b001fc2f5df269365fb77bd8396ce6b1f61c9848f7f088c25e57494bacc57b"
+checksum = "ac06db03ec2f46ee0ecdca1a1c34a99c0d188a0d83439b84bf0cb4b386e4ab09"
 dependencies = [
  "approx",
- "itertools",
  "matrixmultiply",
  "num-complex",
  "num-integer",

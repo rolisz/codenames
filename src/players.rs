@@ -1,5 +1,5 @@
 use rand::prelude::*;
-
+use ndarray::prelude::*;
 
 use crate::game::{CODENAME_WORDS, Game};
 use std::io;
@@ -7,8 +7,11 @@ use std::io::BufReader;
 use std::fs::File;
 
 use finalfusion::prelude::*;
-use crate::map::Map;
-
+use crate::map::{Map, State};
+use finalfusion::similarity::WordSimilarity;
+use crate::map::State::{Blue, Red};
+use ndarray::ArrayView1;
+use itertools::Itertools;
 
 #[derive(Debug)]
 pub struct Hint {
@@ -131,42 +134,56 @@ impl FieldOperatives for HumanCliFieldOperatives {
    }
 }
 
-pub struct SimpleWordVectorSpymaster {
-    embeddings: Embeddings<VocabWrap, StorageWrap>
+pub struct SimpleWordVectorSpymaster<'a> {
+    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
+    color: State,
 }
-impl SimpleWordVectorSpymaster {
-    pub fn new() -> SimpleWordVectorSpymaster {
-        let mut reader = BufReader::new(File::open("resources/english-skipgram-mincount-50-ctx-10-ns-5-dims-300.fifu").unwrap());
 
-       // Read the embeddings.
-       let embeddings: Embeddings<VocabWrap, StorageWrap> =
-           Embeddings::read_embeddings(&mut reader)
-           .unwrap();
-        SimpleWordVectorSpymaster{embeddings}
+impl SimpleWordVectorSpymaster<'_> {
+    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>, color: State) -> SimpleWordVectorSpymaster {
+        SimpleWordVectorSpymaster{embeddings, color}
     }
 }
 
-impl Spymaster for SimpleWordVectorSpymaster {
+impl Spymaster for SimpleWordVectorSpymaster<'_> {
     fn give_hint(&mut self, map: &Map) -> Hint {
-        let mut input = String::new();
-        match io::stdin().read_line(&mut input) {
-            Ok(n) => {
-                let results = input.split_ascii_whitespace().collect::<Vec<&str>>();
-                let count = results[0].parse::<i32>().unwrap();
-                Hint{count, word: String::from(results[0])}
-            }
-            Err(error) => panic!("error: {}", error),
-        }
+        let enemy_color = match self.color {
+            Red => Blue,
+            Blue=> Red,
+            _ => panic!("Invalid player color")
+        };
+        let remaining_words = map.get_remaining_words_of_color(enemy_color);
+        let word = remaining_words.get(0).unwrap();
+        let words = self.embeddings.word_similarity(word, 10).unwrap();
+        println!("Similar words: {:?}", words);
+        return Hint{count: 1, word: words.get(0).unwrap().word.to_string()};
     }
 }
 
-#[derive(Debug)]
-pub struct SimpleWordVectorFieldOperatives {
-
+pub struct SimpleWordVectorFieldOperatives<'a> {
+    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
 }
 
-impl SimpleWordVectorFieldOperatives {
-    pub fn new() -> SimpleWordVectorFieldOperatives {
-        SimpleWordVectorFieldOperatives{}
+impl SimpleWordVectorFieldOperatives<'_> {
+    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>) -> SimpleWordVectorFieldOperatives {
+        SimpleWordVectorFieldOperatives{embeddings}
+    }
+}
+
+impl FieldOperatives for SimpleWordVectorFieldOperatives<'_> {
+    fn choose_words<'a>(&mut self, hint: &Hint, words: &Vec<&'a String>) -> Vec<&'a String> {
+        let count = hint.count;
+        let hint_word = &hint.word;
+        let hint_emb = self.embeddings.embedding(hint_word).unwrap();
+        let hint_embedding: ArrayView1<f32> = hint_emb.view();
+
+        let mut similarities: Vec<f32> = vec![];
+        for w in words {
+            let new_embed = self.embeddings.embedding(w).unwrap();
+            let similarity = new_embed.view().dot(&hint_embedding);
+            similarities.push(similarity);
+        }
+        let sorted_sims: Vec<(usize, &f32)> = similarities.iter().enumerate().sorted_by(|(_, elem), (_, elem2)| elem.partial_cmp(elem2).unwrap()).collect();
+        return vec![words[sorted_sims.last().unwrap().0]]
     }
 }

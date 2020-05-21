@@ -66,6 +66,12 @@ impl Map {
         self.cells.iter().filter(|x| !x.visibility).map(|x| x.word).collect()
     }
 
+    pub fn get_remaining_words_of_color(&self, color: State) -> Vec<&'static String> {
+        self.cells.iter().filter(|x| !x.visibility)
+            .filter(|x| x.color == color).map(|x| x.word).collect()
+
+    }
+
     pub fn get_cell(&mut self, word: &String) -> &mut Cell {
         //  The word should be guaranteed to be from the words on the map
         self.cells.iter_mut().find(|x| x.word == word).unwrap()
