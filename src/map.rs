@@ -11,7 +11,7 @@ pub enum Color {
 }
 
 impl fmt::Display for Color {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let char = match self {
             Gray => 'N',
             Red => 'R',
@@ -30,7 +30,7 @@ pub struct Cell<'a> {
 }
 
 impl fmt::Display for Cell<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if self.revealed {
             f.pad(&format!("{}", self.color))
         } else {
@@ -45,7 +45,7 @@ pub struct Map<'a> {
 
 
 impl fmt::Debug for Map<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for i in 0..5 {
             write!(f, "{} {} {} {} {}\n",
                    self.cells[i*5].color, self.cells[i*5+1].color, self.cells[i*5+2].color, self.cells[i*5+3].color, self.cells[i*5+4].color)?;
@@ -60,7 +60,7 @@ impl fmt::Debug for Map<'_> {
 }
 
 impl fmt::Display for Map<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let max_len = self.cells.iter().map(|x| x.word.len()).max().unwrap();
         for i in 0..5 {
             for j in 0..5 {
@@ -73,7 +73,7 @@ impl fmt::Display for Map<'_> {
 }
 
 impl Map<'_> {
-    pub fn new(words: Vec<&str>) -> Map {
+    pub fn new<'a>(words: &'a Vec<&str>) -> Map<'a> {
         let mut colors = vec![Gray; 7];
         colors.append(&mut vec![Red; 9]);
         colors.append(&mut vec![Blue; 8]);
@@ -81,7 +81,7 @@ impl Map<'_> {
 
         let mut rng = thread_rng();
         colors.shuffle(&mut rng);
-        let words: Vec<&str> = words.into_iter().choose_multiple(&mut rng, 25);
+        let words: Vec<&&str> = words.into_iter().choose_multiple(&mut rng, 25);
 
         let mut cells = Vec::with_capacity(25);
         for i in 0..25 {
