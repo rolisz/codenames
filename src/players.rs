@@ -6,7 +6,7 @@ use std::io;
 #[derive(Debug)]
 pub struct Hint {
     word: String,
-    count: i32,
+    count: usize,
 }
 
 pub trait Spymaster {
@@ -14,23 +14,21 @@ pub trait Spymaster {
 }
 
 pub trait FieldOperative {
-    fn choose_words<'a>(&mut self, hint: &Hint, words: &Vec<&'a str>) -> Vec<&'a str>;
+    fn choose_words<'a>(&mut self, hint: &Hint, words: &[&'a str]) -> Vec<&'a str>;
 }
 
 
-#[derive(Debug)]
 pub struct RandomSpyMaster<'a> {
     rng: ThreadRng,
-    clues: &'a Vec<&'a str>
+    clues: &'a [&'a str]
 }
 
-#[derive(Debug)]
 pub struct RandomFieldOperative {
     rng: ThreadRng,
 }
 
 impl RandomSpyMaster<'_> {
-    pub fn new<'a>(words: &'a Vec<&'a str>) -> RandomSpyMaster<'a> {
+    pub fn new<'a>(words: &'a [&'a str]) -> RandomSpyMaster<'a> {
         let rng = thread_rng();
         RandomSpyMaster{rng, clues: words}
     }
@@ -46,23 +44,21 @@ impl RandomFieldOperative {
 
 impl Spymaster for RandomSpyMaster<'_> {
     fn give_hint(&mut self, _map: &Map) -> Hint {
-        let word = self.clues.choose(&mut self.rng).unwrap().to_string();
+        let word = (*self.clues.choose(&mut self.rng).unwrap()).to_string();
         let count = self.rng.gen_range(1, 5);
         Hint { word, count }
     }
 }
 
 impl FieldOperative for RandomFieldOperative {
-    fn  choose_words<'a>(&mut self, hint: &Hint, words: &Vec<&'a str>) -> Vec<&'a str> {
+    fn  choose_words<'a>(&mut self, hint: &Hint, words: &[&'a str]) -> Vec<&'a str> {
         let nr_found_words = self.rng.gen_range(1, hint.count+1) as usize;
-        words.choose_multiple(&mut self.rng, nr_found_words).map(|&x| x).collect()
+        words.choose_multiple(&mut self.rng, nr_found_words).copied().collect()
     }
 }
 
-#[derive(Debug)]
 pub struct HumanCliSpymaster {}
 
-#[derive(Debug)]
 pub struct HumanCliFieldOperative {}
 
 impl Spymaster for HumanCliSpymaster {
@@ -72,7 +68,7 @@ impl Spymaster for HumanCliSpymaster {
             let mut input = String::new();
             io::stdin().read_line(&mut input).unwrap();
             let results = input.split_ascii_whitespace().collect::<Vec<&str>>();
-            match results[0].parse::<i32>() {
+            match results[0].parse::<usize>() {
                 Ok(count) => return Hint { count, word: results[0].to_string() },
                 Err(_e) => println!("Give hint in count, word format!"),
             };
@@ -82,7 +78,7 @@ impl Spymaster for HumanCliSpymaster {
 
 
 impl FieldOperative for HumanCliFieldOperative {
-   fn choose_words<'a>(&mut self, hint: &Hint, words: &Vec<&'a str>) -> Vec<&'a str> {
+   fn choose_words<'a>(&mut self, hint: &Hint, words: &[&'a str]) -> Vec<&'a str> {
        let mut chosen_words = vec![];
        println!("Choose {} words from {:?}", hint.count, words);
        let mut counts = hint.count;
