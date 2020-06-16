@@ -1,6 +1,9 @@
 use rand::prelude::*;
-use crate::map::Map;
+use crate::map::{Map, Color};
 use std::io;
+use finalfusion::prelude::*;
+use finalfusion::similarity::WordSimilarity;
+use crate::game::opposite_player;
 
 
 #[derive(Debug)]
@@ -100,4 +103,26 @@ impl FieldOperative for HumanCliFieldOperative {
        }
        chosen_words
    }
+}
+
+pub struct SimpleWordVectorSpymaster<'a> {
+    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
+    color: Color,
+}
+
+impl SimpleWordVectorSpymaster<'_> {
+    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>, color: Color) -> SimpleWordVectorSpymaster {
+        SimpleWordVectorSpymaster{embeddings, color}
+    }
+}
+
+impl Spymaster for SimpleWordVectorSpymaster<'_> {
+    fn give_hint(&mut self, map: &Map) -> Hint {
+        let enemy_color = opposite_player(self.color);
+        let remaining_words = map.remaining_words_of_color(enemy_color);
+        let word = remaining_words.get(0).unwrap();
+        let words = self.embeddings.word_similarity(word, 10).unwrap();
+        println!("Similar words: {:?}", words);
+        return Hint{count: 1, word: words.get(0).unwrap().word.to_string()};
+    }
 }
