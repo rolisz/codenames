@@ -4,12 +4,13 @@ use std::io;
 use finalfusion::prelude::*;
 use finalfusion::similarity::WordSimilarity;
 use crate::game::opposite_player;
-
+use ndarray::ArrayView1;
+use itertools::Itertools;
 
 #[derive(Debug)]
 pub struct Hint {
-    word: String,
-    count: usize,
+    pub word: String,
+    pub count: usize,
 }
 
 pub trait Spymaster {
@@ -124,5 +125,38 @@ impl Spymaster for SimpleWordVectorSpymaster<'_> {
         let words = self.embeddings.word_similarity(word, 10).unwrap();
         println!("Similar words: {:?}", words);
         return Hint{count: 1, word: words.get(0).unwrap().word.to_string()};
+    }
+}
+
+
+pub struct SimpleWordVectorFieldOperative<'a> {
+    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
+}
+
+impl SimpleWordVectorFieldOperative<'_> {
+    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>) -> SimpleWordVectorFieldOperative {
+        SimpleWordVectorFieldOperative{embeddings}
+    }
+}
+
+impl FieldOperative for SimpleWordVectorFieldOperative<'_> {
+    fn choose_words<'a>(&mut self, hint: &Hint, words: &[&'a str]) -> Vec<&'a str> {
+        let count = hint.count;
+        let hint_word = &hint.word;
+        let hint_emb = self.embeddings.embedding(hint_word).unwrap();
+        let hint_embedding: ArrayView1<f32> = hint_emb.view();
+
+        let mut similarities: Vec<f32> = vec![];
+        for w in words {
+            let new_embed = self.embeddings.embedding(w).unwrap();
+            let similarity = new_embed.view().dot(&hint_embedding);
+            similarities.push(similarity);
+        }
+        let sorted_sims: Vec<(usize, &f32)> = similarities.iter().enumerate().sorted_by(|(_, elem), (_, elem2)| elem.partial_cmp(elem2).unwrap()).rev().collect();
+        let mut results = vec![];
+        for sims in sorted_sims.iter().take(hint.count) {
+            results.push(words[sims.0]);
+        }
+        results
     }
 }
