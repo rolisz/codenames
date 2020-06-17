@@ -94,6 +94,13 @@ impl Map<'_> {
         self.cells.iter().filter(|x| !x.revealed).map(|x| x.word).collect()
     }
 
+    pub fn remaining_words_of_color(&self, color: Color) -> Vec<&str> {
+        self.cells.iter()
+            .filter(|x| !x.revealed)
+            .filter(|x| x.color == color)
+            .map(|x| x.word).collect()
+    }
+
     pub fn reveal_cell(&mut self, word: &str) -> Color {
         let cell = self.cells.iter_mut().find(|x| x.word == word).unwrap();
         cell.revealed = true;

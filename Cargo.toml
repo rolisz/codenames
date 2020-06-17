@@ -1,5 +1,5 @@
 [package]
-name = "codenames_blog"
+name = "codenames"
 version = "0.1.0"
 authors = ["Roland Szabo <rolisz@gmail.com>"]
 edition = "2018"
@@ -8,3 +8,7 @@ edition = "2018"
 
 [dependencies]
 rand = "0.7"
+finalfusion = "*"
+ndarray = "0.13.1"
+itertools = "0.9.0"
+ordered-float = "1.0.2"

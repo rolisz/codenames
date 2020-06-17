@@ -12,12 +12,14 @@ pub fn opposite_player(color: Color) -> Color {
 
 pub fn get_actions(spymaster: &mut dyn Spymaster, field_op: &mut dyn FieldOperative, map: &Map) -> Vec<String>{
     let hint = spymaster.give_hint(map);
+    println!("Spymaster gave {}, {} as hint.", hint.word, hint.count);
     field_op.choose_words(&hint, &map.remaining_words()).iter().map(|&x| x.to_string()).collect()
 }
 
 pub fn check_if_lost(current_player: Color, guesses: &[String], map: &mut Map) -> bool {
     for word in guesses {
         let color = map.reveal_cell(word);
+        println!("Guess {} was {}", word, color);
         if color == Color::Black {
             return true;
         }

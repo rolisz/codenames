@@ -6,6 +6,8 @@ use finalfusion::similarity::WordSimilarity;
 use crate::game::opposite_player;
 use ndarray::ArrayView1;
 use itertools::Itertools;
+use ordered_float::NotNan;
+
 
 #[derive(Debug)]
 pub struct Hint {
@@ -125,6 +127,37 @@ impl Spymaster for SimpleWordVectorSpymaster<'_> {
         let words = self.embeddings.word_similarity(word, 10).unwrap();
         println!("Similar words: {:?}", words);
         return Hint{count: 1, word: words.get(0).unwrap().word.to_string()};
+    }
+}
+
+
+pub struct BestWordVectorSpymaster<'a> {
+    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
+    color: Color,
+}
+
+impl BestWordVectorSpymaster<'_> {
+    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>, color: Color) -> BestWordVectorSpymaster {
+        BestWordVectorSpymaster{embeddings, color}
+    }
+}
+
+impl Spymaster for BestWordVectorSpymaster<'_> {
+    fn give_hint(&mut self, map: &Map) -> Hint {
+        let enemy_color = opposite_player(self.color);
+        let remaining_words = map.remaining_words_of_color(enemy_color);
+        let mut best_sim= NotNan::new(-1f32).unwrap();
+        let mut best_word = "";
+        for word in remaining_words {
+            let words = self.embeddings.word_similarity(word, 1).unwrap();
+            println!("Similar words to {}: {:?}", word, words);
+            let hint = words.get(0).unwrap();
+            if hint.similarity > best_sim {
+                best_sim = hint.similarity;
+                best_word = hint.word;
+            }
+        }
+        return Hint{count: 1, word: best_word.to_string()};
     }
 }
 
