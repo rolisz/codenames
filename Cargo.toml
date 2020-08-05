@@ -5,6 +5,10 @@ authors = ["Roland Szabo <rolisz@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "gen_wordlist"
+test = false
+bench = false
 
 [dependencies]
 rand = "0.7"
@@ -12,3 +16,4 @@ finalfusion = "*"
 ndarray = "0.13.1"
 itertools = "0.9.0"
 ordered-float = "1.0.2"
+Inflector = "0.11.4"

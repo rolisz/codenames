@@ -2,12 +2,14 @@ use rand::prelude::*;
 use crate::map::{Map, Color};
 use std::io;
 use finalfusion::prelude::*;
-use finalfusion::similarity::WordSimilarity;
+use finalfusion::similarity::{WordSimilarity, EmbeddingSimilarity};
 use crate::game::opposite_player;
-use ndarray::ArrayView1;
+use ndarray::{ArrayView1, ArrayView2, ViewRepr};
 use itertools::Itertools;
 use ordered_float::NotNan;
-
+use inflector::string::pluralize::to_plural;
+use std::collections::HashSet;
+use std::hash::Hash;
 
 #[derive(Debug)]
 pub struct Hint {
@@ -149,7 +151,14 @@ impl Spymaster for BestWordVectorSpymaster<'_> {
         let mut best_sim= NotNan::new(-1f32).unwrap();
         let mut best_word = "";
         for word in remaining_words {
-            let words = self.embeddings.word_similarity(word, 1).unwrap();
+            let word = word.to_lowercase();
+            let embed = self.embeddings.embedding(&word).unwrap();
+            let mut skip: HashSet<&str> = HashSet::new();
+            skip.insert(&word);
+            let pluralized = to_plural(&word);
+            skip.insert(&pluralized);
+            println!("{} - {}", word, pluralized);
+            let words = self.embeddings.embedding_similarity_masked(embed.view(), 10, &skip).unwrap();
             println!("Similar words to {}: {:?}", word, words);
             let hint = words.get(0).unwrap();
             if hint.similarity > best_sim {
@@ -181,7 +190,9 @@ impl FieldOperative for SimpleWordVectorFieldOperative<'_> {
 
         let mut similarities: Vec<f32> = vec![];
         for w in words {
-            let new_embed = self.embeddings.embedding(w).unwrap();
+            let w = w.to_lowercase();
+            println!("{}", w);
+            let new_embed = self.embeddings.embedding(&w).unwrap();
             let similarity = new_embed.view().dot(&hint_embedding);
             similarities.push(similarity);
         }
