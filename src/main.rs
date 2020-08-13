@@ -43,7 +43,7 @@ fn main() {
     let mut map = Map::new(&words);
     println!("{:?}", map);
 
-    let mut sp = BestWordVectorSpymaster::new(&embeddings, Color::Red);
+    let mut sp = DoubleHintVectorSpymaster::new(&embeddings, Color::Red);
     //let mut sp = HumanCliSpymaster{};
     let mut fo = SimpleWordVectorFieldOperative::new(&embeddings);
     //let mut fo = HumanCliFieldOperative{};
