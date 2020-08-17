@@ -90,6 +90,52 @@ impl Map<'_> {
         Map{cells}
     }
 
+    pub fn new_fixed1<'a>(words: &[&'a str]) -> Map<'a> {
+        let mut colors = vec![Blue; 8];
+        colors.append(&mut vec![Red; 9]);
+        colors.append(&mut vec![Gray; 7]);
+        colors.push(Black);
+
+       let word_idx = (1..26).map(|x| x*5).collect::<Vec<usize>>();
+        let words: Vec<&str> = word_idx.iter().map(|&x| words[x]).collect();
+
+        let mut cells = Vec::with_capacity(25);
+        for i in 0..25 {
+            cells.push(Cell { color: colors[i], word: words[i], revealed: false });
+        }
+        Map{cells}
+    }
+
+        pub fn new_fixed2<'a>(words: &[&'a str]) -> Map<'a> {
+        let mut colors = vec![Blue; 8];
+        colors.append(&mut vec![Red; 9]);
+        colors.append(&mut vec![Gray; 7]);
+        colors.push(Black);
+
+       let word_idx = (1..26).map(|x| x*10).collect::<Vec<usize>>();
+        let words: Vec<&str> = word_idx.iter().map(|&x| words[x]).collect();
+
+        let mut cells = Vec::with_capacity(25);
+        for i in 0..25 {
+            cells.push(Cell { color: colors[i], word: words[i], revealed: false });
+        }
+        Map{cells}
+    }
+        pub fn new_fixed3<'a>(words: &[&'a str]) -> Map<'a> {
+        let mut colors = vec![Blue; 8];
+        colors.append(&mut vec![Red; 9]);
+        colors.append(&mut vec![Gray; 7]);
+        colors.push(Black);
+
+       let word_idx = (1..26).map(|x| x*8).collect::<Vec<usize>>();
+        let words: Vec<&str> = word_idx.iter().map(|&x| words[x]).collect();
+
+        let mut cells = Vec::with_capacity(25);
+        for i in 0..25 {
+            cells.push(Cell { color: colors[i], word: words[i], revealed: false });
+        }
+        Map{cells}
+    }
     pub fn remaining_words(&self) -> Vec<&str> {
         self.cells.iter().filter(|x| !x.revealed).map(|x| x.word).collect()
     }

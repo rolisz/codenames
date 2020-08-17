@@ -4,7 +4,7 @@ use std::io;
 use finalfusion::prelude::*;
 use finalfusion::similarity::{WordSimilarity, EmbeddingSimilarity};
 use crate::game::opposite_player;
-use ndarray::{ArrayView1, ArrayView2, ViewRepr};
+use ndarray::{ArrayView1, ArrayView2, ViewRepr, Array1, ArrayViewMut1, ShapeBuilder};
 use itertools::Itertools;
 use ordered_float::NotNan;
 use inflector::string::pluralize::to_plural;
@@ -121,9 +121,9 @@ fn find_similar_words<'a>(word: &str, embeddings: &'a Embeddings<VocabWrap, Stor
     skip.insert(&word);
     let pluralized = to_plural(&word);
     skip.insert(&pluralized);
-    println!("{} - {}", word, pluralized);
+    // println!("{} - {}", word, pluralized);
     let words = embeddings.embedding_similarity_masked(embed.view(), limit, &skip).unwrap();
-    println!("Similar words to {}: {:?}", word, words);
+    // println!("Similar words to {}: {:?}", word, words);
     words
 }
 
@@ -145,7 +145,7 @@ impl Spymaster for SimpleWordVectorSpymaster<'_> {
         let remaining_words = map.remaining_words_of_color(enemy_color);
         let word = remaining_words.get(0).unwrap();
         let words = self.embeddings.word_similarity(word, 10).unwrap();
-        println!("Similar words: {:?}", words);
+        // println!("Similar words: {:?}", words);
         return Hint{count: 1, word: words.get(0).unwrap().word.to_string()};
     }
 }
@@ -197,27 +197,77 @@ impl Spymaster for DoubleHintVectorSpymaster<'_> {
     fn give_hint(&mut self, map: &Map) -> Hint {
         let enemy_color = opposite_player(self.color);
         let remaining_words = map.remaining_words_of_color(enemy_color);
-        let mut best_sim= NotNan::new(-1f32).unwrap();
-        let mut best_word = "";
+
         let mut sim_words = HashMap::new();
         for word in remaining_words {
             let words = find_similar_words(&word, self.embeddings, 20);
             for w in words {
-                if w.similarity > NotNaN::new(0.3).unwrap() {
+                if w.similarity > NotNaN::new(0.2).unwrap() {
                     let count = sim_words.entry(w.word).or_insert(0);
                     *count +=1;
                 }
             }
         }
-        for (k, v) in sim_words {
-            println!("{} {}", k, v);
+        let mut best_word = sim_words.iter().max_by_key(|(&x, &y)| y).unwrap();
 
-        }
-
-        return Hint{count: 1, word: best_word.to_string()};
+        return Hint{count: *best_word.1 as usize, word: best_word.0.to_string()};
     }
 }
 
+// Build out sets of 3-4-5 words, add them up and then find closest word to that embedding
+
+pub struct SummedVectorSpymaster<'a> {
+    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
+    color: Color,
+    cnt: usize,
+}
+
+impl SummedVectorSpymaster<'_> {
+    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>, color: Color, cnt: usize) -> SummedVectorSpymaster {
+        SummedVectorSpymaster{embeddings, color, cnt}
+    }
+}
+
+impl Spymaster for SummedVectorSpymaster<'_> {
+    // This spymaster tries to find a clue that matches two words
+    fn give_hint(&mut self, map: &Map) -> Hint {
+        let enemy_color = opposite_player(self.color);
+        let remaining_words = map.remaining_words_of_color(enemy_color);
+        let mut local_embeddings = HashMap::new();
+        for &word in &remaining_words {
+            let emb = self.embeddings.embedding(&word.to_lowercase()).unwrap();
+            local_embeddings.insert(word.clone(), emb);
+        }
+        let mut best_sim= NotNan::new(-1f32).unwrap();
+        let mut best_word = "";
+
+        let it = remaining_words.iter().combinations(self.cnt);
+        for word_combs in it {
+            let emb_sum = word_combs.iter().map(|&x| local_embeddings.get(x).unwrap()).fold(Array1::zeros((300).f()), |x, y|{
+                x+y
+            });
+            let mut skip_set: HashSet<&str> = HashSet::new();
+            let plurals = word_combs.iter().map(|x| to_plural(x)).collect::<Vec<String>>();
+            for w in &word_combs {
+                skip_set.insert(w);
+            }
+            for w in &plurals {
+                skip_set.insert(&w);
+            }
+            let ws = self.embeddings.embedding_similarity_masked(emb_sum.view(), 20, &skip_set).unwrap();
+            // println!("{:?}", word_combs);
+            // println!("{:?}", ws);
+            let hint = ws.get(0).unwrap();
+            if hint.similarity > best_sim {
+                best_sim = hint.similarity;
+                best_word = hint.word;
+                println!("Best sim so far: {:?}", word_combs);
+            }
+        }
+
+        return Hint{count: self.cnt, word: best_word.to_string()};
+    }
+}
 
 pub struct SimpleWordVectorFieldOperative<'a> {
     embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
