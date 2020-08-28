@@ -113,53 +113,21 @@ impl FieldOperative for HumanCliFieldOperative {
    }
 }
 
-fn find_similar_words<'a>(word: &str, embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
-                      limit: usize) -> Vec<WordSimilarityResult<'a>> {
-    let word = word.to_lowercase();
+type Embedding = Embeddings<VocabWrap, StorageViewWrap>;
+
+fn find_similar_words<'a>(word: &str, embeddings: &'a Embedding, limit: usize) -> Vec<WordSimilarityResult<'a>> {
     let embed = embeddings.embedding(&word).unwrap();
     let mut skip: HashSet<&str> = HashSet::new();
     skip.insert(&word);
     let pluralized = to_plural(&word);
     skip.insert(&pluralized);
-    // println!("{} - {}", word, pluralized);
-    let words = embeddings.embedding_similarity_masked(embed.view(), limit, &skip).unwrap();
-    // println!("Similar words to {}: {:?}", word, words);
-    words
-}
-
-pub struct SimpleWordVectorSpymaster<'a> {
-    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
-    color: Color,
-}
-
-impl SimpleWordVectorSpymaster<'_> {
-    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>, color: Color) -> SimpleWordVectorSpymaster {
-        SimpleWordVectorSpymaster{embeddings, color}
-    }
-}
-
-impl Spymaster for SimpleWordVectorSpymaster<'_> {
-    // This spymaster gives clues only pertaining to the first word
-    fn give_hint(&mut self, map: &Map) -> Hint {
-        let enemy_color = opposite_player(self.color);
-        let remaining_words = map.remaining_words_of_color(enemy_color);
-        let word = remaining_words.get(0).unwrap();
-        let words = self.embeddings.word_similarity(word, 10).unwrap();
-        // println!("Similar words: {:?}", words);
-        return Hint{count: 1, word: words.get(0).unwrap().word.to_string()};
-    }
+    embeddings.embedding_similarity_masked(embed.view(), limit, &skip).unwrap()
 }
 
 
 pub struct BestWordVectorSpymaster<'a> {
-    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
-    color: Color,
-}
-
-impl BestWordVectorSpymaster<'_> {
-    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>, color: Color) -> BestWordVectorSpymaster {
-        BestWordVectorSpymaster{embeddings, color}
-    }
+    pub embeddings: &'a Embedding,
+    pub color: Color,
 }
 
 impl Spymaster for BestWordVectorSpymaster<'_> {
@@ -167,7 +135,7 @@ impl Spymaster for BestWordVectorSpymaster<'_> {
     fn give_hint(&mut self, map: &Map) -> Hint {
         let enemy_color = opposite_player(self.color);
         let remaining_words = map.remaining_words_of_color(enemy_color);
-        let mut best_sim= NotNan::new(-1f32).unwrap();
+        let mut best_sim = NotNan::new(-1f32).unwrap();
         let mut best_word = "";
         for word in remaining_words {
             let words = find_similar_words(&word, self.embeddings, 1);
@@ -182,15 +150,10 @@ impl Spymaster for BestWordVectorSpymaster<'_> {
 }
 
 pub struct DoubleHintVectorSpymaster<'a> {
-    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
-    color: Color,
+    pub embeddings: &'a Embedding,
+    pub color: Color,
 }
 
-impl DoubleHintVectorSpymaster<'_> {
-    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>, color: Color) -> DoubleHintVectorSpymaster {
-        DoubleHintVectorSpymaster{embeddings, color}
-    }
-}
 
 impl Spymaster for DoubleHintVectorSpymaster<'_> {
     // This spymaster tries to find a clue that matches two words
@@ -217,16 +180,11 @@ impl Spymaster for DoubleHintVectorSpymaster<'_> {
 // Build out sets of 3-4-5 words, add them up and then find closest word to that embedding
 
 pub struct SummedVectorSpymaster<'a> {
-    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
-    color: Color,
-    cnt: usize,
+    pub embeddings: &'a Embedding,
+    pub color: Color,
+    pub cnt: usize,
 }
 
-impl SummedVectorSpymaster<'_> {
-    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>, color: Color, cnt: usize) -> SummedVectorSpymaster {
-        SummedVectorSpymaster{embeddings, color, cnt}
-    }
-}
 
 impl Spymaster for SummedVectorSpymaster<'_> {
     // This spymaster tries to find a clue that matches two words
@@ -270,11 +228,11 @@ impl Spymaster for SummedVectorSpymaster<'_> {
 }
 
 pub struct SimpleWordVectorFieldOperative<'a> {
-    embeddings: &'a Embeddings<VocabWrap, StorageViewWrap>,
+    embeddings: &'a Embedding,
 }
 
 impl SimpleWordVectorFieldOperative<'_> {
-    pub fn new(embeddings: &Embeddings<VocabWrap, StorageViewWrap>) -> SimpleWordVectorFieldOperative {
+    pub fn new(embeddings: &Embedding) -> SimpleWordVectorFieldOperative {
         SimpleWordVectorFieldOperative{embeddings}
     }
 }

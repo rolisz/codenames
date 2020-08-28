@@ -10,7 +10,7 @@ use finalfusion::io::WriteEmbeddings;
 
 
 fn main() {
-     let mut reader = BufReader::new(File::open("resources/english-skipgram-mincount-50-ctx-10-ns-5-dims-300.fifu").unwrap());
+     let mut reader = BufReader::new(File::open("resources/ff.fifu").unwrap());
     //
     // Read the embeddings.
     let embeddings: Embeddings<VocabWrap, StorageViewWrap> =
@@ -19,27 +19,17 @@ fn main() {
 
     let words = embeddings.vocab().words();
     let mut total = 0;
-    let mut letters = 0;
     let mut lowercase = 0;
-    let mut uppercase = 0;
-    let mut alphanum = 0;
     let mut select = HashSet::new();
     for w in words {
         //println!("{}", w);
         total += 1;
-        if w.chars().all(char::is_alphabetic) {
-            letters += 1;
-            if !w.chars().any(char::is_uppercase) {
-                lowercase +=1;
-                select.insert(w.clone());
-            } else {
-                uppercase +=1;
-            }
-        } else {
-            alphanum +=1;
+        if w.chars().all(char::is_lowercase) {
+            lowercase +=1;
+            select.insert(w.clone());
         }
     }
-    println!("{} {} {} {} {}", total, letters, alphanum, lowercase, uppercase);
+    println!("{} {}", total,  lowercase);
 
     let mut selected_vocab = Vec::new();
     let mut selected_storage = Array2::zeros((select.len(), embeddings.dims()));
