@@ -163,15 +163,13 @@ impl Spymaster for DoubleHintVectorSpymaster<'_> {
 
         let mut sim_words = HashMap::new();
         for word in remaining_words {
-            let words = find_similar_words(&word, self.embeddings, 20);
+            let words = find_similar_words(&word, self.embeddings, 200);
             for w in words {
-                if w.similarity > NotNaN::new(0.2).unwrap() {
-                    let count = sim_words.entry(w.word).or_insert(0);
-                    *count +=1;
-                }
+                let count = sim_words.entry(w.word).or_insert(0);
+                *count +=1;
             }
         }
-        let mut best_word = sim_words.iter().max_by_key(|(&x, &y)| y).unwrap();
+        let mut best_word = sim_words.iter().max_by_key(|(_, &y)| y).unwrap();
 
         return Hint{count: *best_word.1 as usize, word: best_word.0.to_string()};
     }
@@ -239,24 +237,16 @@ impl SimpleWordVectorFieldOperative<'_> {
 
 impl FieldOperative for SimpleWordVectorFieldOperative<'_> {
     fn choose_words<'a>(&mut self, hint: &Hint, words: &[&'a str]) -> Vec<&'a str> {
-        let count = hint.count;
-        let hint_word = &hint.word;
-        let hint_emb = self.embeddings.embedding(hint_word).unwrap();
-        let hint_embedding: ArrayView1<f32> = hint_emb.view();
-
-        let mut similarities: Vec<f32> = vec![];
+        let hint_emb = self.embeddings.embedding(&hint.word).unwrap();
+        let hint_embedding = hint_emb.view();
+        let mut similarities = vec![];
         for w in words {
-            let w = w.to_lowercase();
-            //println!("{}", w);
             let new_embed = self.embeddings.embedding(&w).unwrap();
-            let similarity = new_embed.view().dot(&hint_embedding);
-            similarities.push(similarity);
+            let similarity: f32 = new_embed.view().dot(&hint_embedding);
+            similarities.push((w, similarity));
         }
-        let sorted_sims: Vec<(usize, &f32)> = similarities.iter().enumerate().sorted_by(|(_, elem), (_, elem2)| elem.partial_cmp(elem2).unwrap()).rev().collect();
-        let mut results = vec![];
-        for sims in sorted_sims.iter().take(hint.count) {
-            results.push(words[sims.0]);
-        }
-        results
+        similarities.iter()
+            .sorted_by(|(_, e), (_, e2)| e.partial_cmp(e2).unwrap())
+            .rev().take(hint.count).map(|x| *x.0).collect()
     }
 }

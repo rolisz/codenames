@@ -56,38 +56,45 @@ fn main() {
     //let mut fo = HumanCliFieldOperative{};
 
 
-        let hint = bwsp.give_hint(&map);
-    println!("Best word: {:?}", &hint);
-    //     let hint = dhsp.give_hint(&map);
-    // println!("Double word: {:?}", &hint);
+//        let hint = bwsp.give_hint(&map);
+//    println!("Best word: {:?}", &hint);
+
+         let hint = dhsp.give_hint(&map);
+     println!("Double word: {:?}", &hint);
     //     let hint = svsp2.give_hint(&map);
     // println!("Summed 2: {:?}", &hint);
     //         let hint = svsp3.give_hint(&map);
     // println!("Summed 3: {:?}", &hint);
     //         let hint = svsp4.give_hint(&map);
     // println!("Summed 4: {:?}", &hint);
+    let resp = fo.choose_words(&hint, &map.remaining_words());
+    println!("Choices: {:?}", resp);
 
         let mut map = Map::new_fixed2(&words);
         println!("Words on board: {:?}", map.remaining_words_of_color(Blue));
 
-        let hint = bwsp.give_hint(&map);
-    println!("Best word: {:?}", &hint);
-    //     let hint = dhsp.give_hint(&map);
-    // println!("Double word: {:?}", &hint);
+//        let hint = bwsp.give_hint(&map);
+//    println!("Best word: {:?}", &hint);
+
+         let hint = dhsp.give_hint(&map);
+     println!("Double word: {:?}", &hint);
     //     let hint = svsp2.give_hint(&map);
     // println!("Summed 2: {:?}", &hint);
     //         let hint = svsp3.give_hint(&map);
     // println!("Summed 3: {:?}", &hint);
     //         let hint = svsp4.give_hint(&map);
     // println!("Summed 4: {:?}", &hint);
+    let resp = fo.choose_words(&hint, &map.remaining_words());
+    println!("Choices: {:?}", resp);
 
             let mut map = Map::new_fixed3(&words);
         println!("Words on board: {:?}", map.remaining_words_of_color(Blue));
 
-        let hint = bwsp.give_hint(&map);
-    println!("Best word: {:?}", &hint);
-    //     let hint = dhsp.give_hint(&map);
-    // println!("Double word: {:?}", &hint);
+//        let hint = bwsp.give_hint(&map);
+//    println!("Best word: {:?}", &hint);
+
+         let hint = dhsp.give_hint(&map);
+     println!("Double word: {:?}", &hint);
     //     let hint = svsp2.give_hint(&map);
     // println!("Summed 2: {:?}", &hint);
     //         let hint = svsp3.give_hint(&map);
@@ -95,6 +102,8 @@ fn main() {
     //         let hint = svsp4.give_hint(&map);
     // println!("Summed 4: {:?}", &hint);
     // println!("{:?}", fo.choose_words(&hint, &words));
+   let resp = fo.choose_words(&hint, &map.remaining_words());
+    println!("Choices: {:?}", resp);
 
     // let result = game(&mut sp, &mut fo,
     //        &mut RandomSpyMaster::new(&words), &mut RandomFieldOperative::new(), &mut map);
