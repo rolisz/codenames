@@ -15,7 +15,7 @@ use std::time::Instant;
 
 
 fn main() {
-    // let mut reader = BufReader::new(File::open("resources/english-skipgram-mincount-50-ctx-10-ns-5-dims-300.fifu").unwrap());
+    // let mut reader = BufReader::new(File::open("resources/ff.fifu").unwrap());
     // let mut reader = BufReader::new(File::open("resources/cc.en.300.fifu").unwrap());
 
     let now = Instant::now();
@@ -45,7 +45,7 @@ fn main() {
 
     let mut map = Map::new_fixed1(&words);
     //println!("{:?}", map);
-    println!("Words on board: {:?}", map.remaining_words_of_color(Blue));
+    println!("Words on board: {:?}", map);
     let mut svsp2 = SummedVectorSpymaster{embeddings: &embeddings, color:Color::Red, cnt: 2};
     let mut svsp3 = SummedVectorSpymaster{embeddings: &embeddings, color:Color::Red, cnt: 3};
     let mut svsp4 = SummedVectorSpymaster{embeddings: &embeddings, color:Color::Red, cnt: 4};
@@ -56,8 +56,8 @@ fn main() {
     //let mut fo = HumanCliFieldOperative{};
 
 
-//        let hint = bwsp.give_hint(&map);
-//    println!("Best word: {:?}", &hint);
+   //     let hint = bwsp.give_hint(&map);
+   // println!("Best word: {:?}", &hint);
 
          let hint = dhsp.give_hint(&map);
      println!("Double word: {:?}", &hint);
@@ -71,10 +71,10 @@ fn main() {
     println!("Choices: {:?}", resp);
 
         let mut map = Map::new_fixed2(&words);
-        println!("Words on board: {:?}", map.remaining_words_of_color(Blue));
+        println!("Words on board: {:?}", map);
 
-//        let hint = bwsp.give_hint(&map);
-//    println!("Best word: {:?}", &hint);
+   //     let hint = bwsp.give_hint(&map);
+   // println!("Best word: {:?}", &hint);
 
          let hint = dhsp.give_hint(&map);
      println!("Double word: {:?}", &hint);
@@ -88,10 +88,10 @@ fn main() {
     println!("Choices: {:?}", resp);
 
             let mut map = Map::new_fixed3(&words);
-        println!("Words on board: {:?}", map.remaining_words_of_color(Blue));
+        println!("Words on board: {:?}", map);
 
-//        let hint = bwsp.give_hint(&map);
-//    println!("Best word: {:?}", &hint);
+   //     let hint = bwsp.give_hint(&map);
+   // println!("Best word: {:?}", &hint);
 
          let hint = dhsp.give_hint(&map);
      println!("Double word: {:?}", &hint);

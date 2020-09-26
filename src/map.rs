@@ -1,6 +1,8 @@
 use core::fmt;
 use crate::map::Color::{Gray, Red, Blue, Black};
 use rand::prelude::*;
+use rand::{Rng, SeedableRng};
+use rand::rngs::SmallRng;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Color {
@@ -96,7 +98,10 @@ impl Map<'_> {
         colors.append(&mut vec![Gray; 7]);
         colors.push(Black);
 
-       let word_idx = (1..26).map(|x| x*2063%399).collect::<Vec<usize>>();
+        let mut rng = SmallRng::seed_from_u64(12873);
+        colors.shuffle(&mut rng);
+
+        let word_idx = (1..26).map(|x| x*2063%399).collect::<Vec<usize>>();
         let words: Vec<&str> = word_idx.iter().map(|&x| words[x]).collect();
 
         let mut cells = Vec::with_capacity(25);
@@ -106,13 +111,16 @@ impl Map<'_> {
         Map{cells}
     }
 
-        pub fn new_fixed2<'a>(words: &[&'a str]) -> Map<'a> {
+    pub fn new_fixed2<'a>(words: &[&'a str]) -> Map<'a> {
         let mut colors = vec![Blue; 8];
         colors.append(&mut vec![Red; 9]);
         colors.append(&mut vec![Gray; 7]);
         colors.push(Black);
 
-       let word_idx = (1..26).map(|x| x*5903%399).collect::<Vec<usize>>();
+        let mut rng = SmallRng::seed_from_u64(842307);
+        colors.shuffle(&mut rng);
+
+        let word_idx = (1..26).map(|x| x*5903%399).collect::<Vec<usize>>();
         let words: Vec<&str> = word_idx.iter().map(|&x| words[x]).collect();
 
         let mut cells = Vec::with_capacity(25);
@@ -121,13 +129,16 @@ impl Map<'_> {
         }
         Map{cells}
     }
-        pub fn new_fixed3<'a>(words: &[&'a str]) -> Map<'a> {
+    pub fn new_fixed3<'a>(words: &[&'a str]) -> Map<'a> {
         let mut colors = vec![Blue; 8];
         colors.append(&mut vec![Red; 9]);
         colors.append(&mut vec![Gray; 7]);
         colors.push(Black);
 
-       let word_idx = (1..26).map(|x| x*7321%399).collect::<Vec<usize>>();
+        let mut rng = SmallRng::seed_from_u64(555555);
+        colors.shuffle(&mut rng);
+
+        let word_idx = (1..26).map(|x| x*7321%399).collect::<Vec<usize>>();
         let words: Vec<&str> = word_idx.iter().map(|&x| words[x]).collect();
 
         let mut cells = Vec::with_capacity(25);

@@ -161,17 +161,25 @@ impl Spymaster for DoubleHintVectorSpymaster<'_> {
         let enemy_color = opposite_player(self.color);
         let remaining_words = map.remaining_words_of_color(enemy_color);
 
-        let mut sim_words = HashMap::new();
+        let mut sim_words: HashMap<&str, Vec<&str>> = HashMap::new();
         for word in remaining_words {
-            let words = find_similar_words(&word, self.embeddings, 200);
+            let words = find_similar_words(&word, self.embeddings, 300);
             for w in words {
-                let count = sim_words.entry(w.word).or_insert(0);
-                *count +=1;
+                if !sim_words.contains_key(w.word) {
+                    let mut lst = vec![word];
+                    sim_words.insert(w.word, lst);
+                } else {
+                    let mut lst = sim_words.get_mut(w.word).unwrap();
+                    lst.push(word);
+                }
+                // let count = sim_words.entry(w.word).or_insert(0);
+                // *count +=1;
             }
         }
-        let mut best_word = sim_words.iter().max_by_key(|(_, &y)| y).unwrap();
+        let mut best_word = sim_words.iter().max_by_key(|(_, y)| y.len()).unwrap();
+        println!("{:?}", best_word);
 
-        return Hint{count: *best_word.1 as usize, word: best_word.0.to_string()};
+        return Hint{count: best_word.1.len() as usize, word: best_word.0.to_string()};
     }
 }
 
